@@ -3,18 +3,31 @@
 <html>
 <head>
     <title>Add a Lode Runner Level</title>
+<style>
+body {
+           font-family: Arial, Helvetica, sans-serif;
+           font-size: 14px;
+           color: #333333;
+           line-height: 1.6;
+           background-color: powderblue;
+       }
+
+</style>
 </head>
 
 <body>
-  <h2>How to view and save new levels for Lode Runner</h2>
-  This utility is for this web version: "https://simonhung.github.io/LodeRunner_TotalRecall/lodeRunner.html"
+  <h2>How to view and save custom levels for Lode Runner</h2>
+<BR>This utility is for this web version: https://robthelinuxguy.github.io/LodeRunner/
 
-<BR><BR>If you create custom levels, you can view and share them.  They are saved in your browser local storage.
-  This guide is only for Chrome.   <BR>Use this link to view your levels.  https://developer.chrome.com/docs/devtools/storage/localstorage
+<BR><BR>Your custom levels are saved in your browser local storage.  You can extract them.
+  This guide is only for Chrome.
+<BR><BR>Use this link to help you view your levels: <a href="https://developer.chrome.com/docs/devtools/storage/localstorage">Here</a>
+<BR>Make sure you are on the correct game URL.  You will see "key" and "value" pairs for your levels ("loderunner_userLevelXXX")
+<BR><BR>Want to add a new level? Just add the new level values here: <a href="https://github.com/robthelinuxguy/LodeRunner/issues">https://github.com/robthelinuxguy/LodeRunner/issues</a>
+<BR><BR><HR>
 
-
-<BR><BR>
-    <h2>Add a Lode Runner Level</h2>
+<BR>
+    <h2>Add a Lode Runner Custom Level to your browser.</h2>
 
     <form onsubmit="handleSubmit(event)">
         <label for="key">Lode Runner level (3 digits, like 003):</label>
