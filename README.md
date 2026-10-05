@@ -11,7 +11,9 @@
 <a target="_blank" href="https://robthelinuxguy.github.io/LodeRunner/">https://robthelinuxguy.github.io/LodeRunner/</a>
 
 ### Play on a Local Machine
-A simple web server is required to play LoderRunner on a local machine.
-Open a web browser and go to "http://127.0.0.1:8080/lodeRunner.html". (use the correct Port)
+A simple web server is required to play Lode Runner on a local machine.
+Open a web browser and go to "http://127.0.0.1:8080/lodeRunner.html". (use the correct Port #)
 
-#### Forked from https://github.com/SimonHung/LodeRunner_TotalRecall
+##### Forked from the amazing work from https://github.com/SimonHung : https://github.com/SimonHung/LodeRunner_TotalRecall
+<br>
+"Lode Runner" is a trademark of Tozai Games. This project is unaffiliated with and unendorsed by Tozai Games or any other rights holder.
