@@ -7,13 +7,15 @@
 
 #### We have added more levels and will soon have the abilty to add new levels.  This version works on tablets as well.
 
+#### Have a comment or want to add a new level?  Just use https://github.com/robthelinuxguy/LodeRunner/issues
+
 ### * PLAY it here:
 <a target="_blank" href="https://robthelinuxguy.github.io/LodeRunner/">https://robthelinuxguy.github.io/LodeRunner/</a>
 
 ### Play on a Local Machine
 A simple web server is required to play Lode Runner on a local machine.
 Open a web browser and go to "http://127.0.0.1:8080/lodeRunner.html". (use the correct Port #)
-
-##### Forked from the amazing work from https://github.com/SimonHung : https://github.com/SimonHung/LodeRunner_TotalRecall
 <br>
+#### Forked from the amazing work from https://github.com/SimonHung : https://github.com/SimonHung/LodeRunner_TotalRecall
+
 "Lode Runner" is a trademark of Tozai Games. This project is unaffiliated with and unendorsed by Tozai Games or any other rights holder.
