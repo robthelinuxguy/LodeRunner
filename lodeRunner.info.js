@@ -63,6 +63,15 @@ var sneakyInfo = [
 	{type: 'TEXT' , contain: "Difficulty : \u2605 \u2605 \u2605 \u2605 \u2605" } //★ ★ ★ ★ ★
 ];
 
+var bigRedAppleInfo = [
+	{type: 'TITLE', contain: " Big Red Apple " },
+	{type: 'TEXT' , contain: "From : Big Red Apple: 100 Levels"},
+	{type: 'TEXT' , contain: "Platform : Lode Runner"},
+	{type: 'TEXT' , contain: "Publisher : Custom levels" },
+	{type: 'TEXT' , contain: "Developer : Custom levels" },
+	{type: 'TEXT' , contain: "Difficulty : \u2605 \u2605 \u2605 \u2605" } //★ ★ ★ ★
+];
+
 //=========================================================================================
 
 var editInfo = [
