@@ -1545,6 +1545,393 @@ function menuDialog(_titleName, _itemList, _stage, _scale, _closeIconEnable, _cl
 	}	
 }
 
+function menuSelectDialog(_titleName, _itemList, _stage, _scale, _closeIconEnable, _closeCallBack, _args)
+{
+	var TITLE_TEXT_SIZE = 48 * _scale;
+	var ITEM_TEXT_SIZE = 32 * _scale;
+	var OPTION_TEXT_SIZE = 24 * _scale;
+	
+	var TITLE_TEXT_COLOR = "white";
+	var TITLE_TEXT_SHADOW_COLOR = "gold";
+	
+	var ITEM_TEXT_COLOR = "white";
+	
+	var TITLE_AREA_Y = TITLE_TEXT_SIZE * 2 | 0;
+	
+	var ITEM_AREA_Y = ITEM_TEXT_SIZE * 3/2 | 0;
+	var OPTION_AREA_Y = OPTION_TEXT_SIZE * 5/4 | 0;
+	var ITEM_GAP_Y = ITEM_TEXT_SIZE * 2/3 | 0;
+	
+	var BOTTOM_AREA_Y = ITEM_AREA_Y/2|0; 
+	
+	var BUTTON_BORDER_SIZE = 8 * _scale;
+	var BUTTON_ROUND_RADIUD = 2+ 4 * _scale; 
+
+	var COVER_BACKGROUND_COLOR = "black";
+	
+	var BUTTON_BACKGROUND_BORDER_COLOR = "white";
+	var BUTTON_BACKGROUND_COLOR = "#5b0680";
+	var BUTTON_BACKGROUND_SHADOW = "gold";
+	var BUTTON_BACKGROUND_BORDER_SIZE = 8 * _scale;
+	
+	var BUTTON_BORDER_COLOR = "gold";
+	var BUTTON_COLOR = "#5d7cff";
+	var OPTION_COLOR = "#4a63cc";
+	var OPTION_HOVER_COLOR = "gold";
+	
+	var CLOSE_ICON_ACTIVE_COLOR = "#ff5050";
+	
+	var screenX1 = _stage.canvas.width;
+	var screenY1 = _stage.canvas.height;
+	
+	var titleTextObj, titleWidth, titleHeight;
+	var itemNames = [], maxItemTextWidth;
+	var playTextObj;
+	var menuX, menuY;
+	var startX, startY;
+	var dropdownX, dropdownY, dropdownW;
+	
+	var coverBackgroundObj, background1Obj, background2Obj;
+	var dropdownObj, optionPanelObj, optionRowObj = [], playButtonObj;
+	var dropdownOpen = false;
+	var closeIconObj = null;
+	var saveKeyStateObj;
+	var activeItemBackup = _itemList[0].activeItem;
+	
+	init();
+
+	function init()
+	{
+		createText();
+		coverParentStage();
+		creatBackground();
+		createTitle();
+		createDropdown();
+		createOptionPanel();
+		createPlayButton();
+		if(_closeIconEnable) {
+			closeIconObj = new closeIconClass(startX+menuX, startY, _stage, _scale, CLOSE_ICON_ACTIVE_COLOR, closeBox, null);
+		}
+
+		_stage.enableMouseOver(120);
+		_stage.update();
+		
+		saveKeyStateObj = saveKeyHandler(handleSelectKeyDown);
+	}
+	
+	function coverParentStage()
+	{
+		coverBackgroundObj = new createjs.Shape();
+		coverBackgroundObj.graphics.beginFill(COVER_BACKGROUND_COLOR).drawRect(0, 0, screenX1, screenY1).endFill();
+		coverBackgroundObj.alpha = 0.6;
+		coverBackgroundObj.on("click", function() { if(dropdownOpen) setDropdownOpen(false); });
+		_stage.addChild(coverBackgroundObj);		
+	}
+	
+	function createText()
+	{
+		var textLength;
+		
+		titleTextObj = new createjs.Text(_titleName, 
+			"bold " + TITLE_TEXT_SIZE + "px Helvetica",TITLE_TEXT_COLOR);
+		titleWidth = titleTextObj.getBounds().width;
+		titleHeight = titleTextObj.getBounds().height;
+		
+		maxItemTextWidth =0;
+		for(var i = 1; i < _itemList.length; i++) {
+			itemNames[i-1] = _itemList[i].name;
+			var measure = new createjs.Text(_itemList[i].name, 
+				"bold " + ITEM_TEXT_SIZE + "px Helvetica",ITEM_TEXT_COLOR);
+			textLength = measure.getBounds().width;
+			if(maxItemTextWidth < textLength) maxItemTextWidth = textLength;
+		}
+		maxItemTextWidth += ITEM_TEXT_SIZE * 2;
+		playTextObj = new createjs.Text(" Select ", "bold " + ITEM_TEXT_SIZE + "px Helvetica", ITEM_TEXT_COLOR);
+		var playWidth = playTextObj.getBounds().width + ITEM_TEXT_SIZE;
+		if(maxItemTextWidth < playWidth) maxItemTextWidth = playWidth;
+		
+		menuX = (maxItemTextWidth > titleWidth? maxItemTextWidth: titleWidth) + TITLE_TEXT_SIZE * 2;
+		menuY = TITLE_AREA_Y + BOTTOM_AREA_Y + ITEM_AREA_Y + ITEM_GAP_Y + ITEM_AREA_Y; 
+		
+		startX = (screenX1-menuX)/2|0;
+		startY = (screenY1-menuY)/2|0;
+		
+		dropdownW = maxItemTextWidth;
+		dropdownX = startX+(menuX - dropdownW)/2|0;
+		dropdownY = startY+TITLE_AREA_Y;
+	}
+	
+	function creatBackground()
+	{
+		background1Obj = new createjs.Shape();
+		background1Obj.graphics.beginFill(BUTTON_BACKGROUND_BORDER_COLOR)
+			.drawRoundRect(startX, startY, menuX, menuY, 8*_scale).endFill();
+		background1Obj.shadow = new createjs.Shadow(BUTTON_BACKGROUND_SHADOW, 3, 3, 5 );
+
+		background2Obj = new createjs.Shape();
+		background2Obj.graphics.beginFill(BUTTON_BACKGROUND_COLOR)
+			.drawRoundRect(startX+BUTTON_BACKGROUND_BORDER_SIZE, startY+BUTTON_BACKGROUND_BORDER_SIZE, 
+						   menuX-BUTTON_BACKGROUND_BORDER_SIZE*2, menuY-BUTTON_BACKGROUND_BORDER_SIZE*2, 8*_scale).endFill();
+		_stage.addChild(background1Obj, background2Obj);
+	}	
+	
+	function createTitle()
+	{
+		titleTextObj.x = startX + (menuX - titleWidth)/2|0;
+		titleTextObj.y = startY + (TITLE_AREA_Y - titleHeight)/2|0;
+		titleTextObj.shadow = new createjs.Shadow(TITLE_TEXT_SHADOW_COLOR, 0, 0, 10 );
+		_stage.addChild(titleTextObj);
+	}
+
+	function selectedName()
+	{
+		return itemNames[_itemList[0].activeItem] || "";
+	}
+
+	function createDropdown()
+	{
+		dropdownObj = new createjs.Container();
+			
+		var border = new createjs.Shape();
+		border.graphics.beginFill(BUTTON_BORDER_COLOR)
+			.drawRoundRect(-BUTTON_BORDER_SIZE, -BUTTON_BORDER_SIZE, 
+			dropdownW+BUTTON_BORDER_SIZE*2, ITEM_AREA_Y+BUTTON_BORDER_SIZE*2,BUTTON_ROUND_RADIUD).endFill();
+			
+		var button = new createjs.Shape();
+		button.graphics.beginFill(BUTTON_COLOR).drawRoundRect(0, 0, 
+			dropdownW, ITEM_AREA_Y,BUTTON_ROUND_RADIUD).endFill();
+			
+		var label = new createjs.Text(selectedName(), "bold " + ITEM_TEXT_SIZE + "px Helvetica", ITEM_TEXT_COLOR);
+		label.textAlign = "left";
+		label.x = ITEM_TEXT_SIZE/3|0;
+		label.y = (ITEM_AREA_Y - label.getBounds().height)/2|0;
+		label.shadow = new createjs.Shadow(TITLE_TEXT_SHADOW_COLOR, 2, 2, 10 );
+
+		var chevron = new createjs.Shape();
+		var ts = 12 * _scale;
+		chevron.graphics.beginFill("white")
+			.moveTo(0, 0).lineTo(ts, 0).lineTo(ts/2, ts*0.7).closePath();
+		chevron.x = dropdownW - ts*2;
+		chevron.y = (ITEM_AREA_Y - ts*0.7)/2|0;
+			
+		dropdownObj.addChild(border, button, label, chevron);
+		dropdownObj.x = dropdownX;
+		dropdownObj.y = dropdownY;
+
+		dropdownObj.on('click', function() { setDropdownOpen(!dropdownOpen); });
+		dropdownObj.on('mouseover', function() { _stage.cursor = 'pointer'; _stage.update(); });
+		dropdownObj.on('mouseout', function() { _stage.cursor = 'default'; _stage.update(); });
+		_stage.addChild(dropdownObj);
+	}
+
+	function updateDropdownLabel()
+	{
+		var label = dropdownObj.getChildAt(2);
+		label.text = selectedName();
+	}
+
+	function createOptionPanel()
+	{
+		optionPanelObj = new createjs.Container();
+		var panelH = OPTION_AREA_Y * itemNames.length;
+		var panelBg = new createjs.Shape();
+		panelBg.graphics.beginFill(BUTTON_BACKGROUND_BORDER_COLOR)
+			.drawRoundRect(-2*_scale, -2*_scale, dropdownW+4*_scale, panelH+4*_scale, BUTTON_ROUND_RADIUD).endFill();
+		panelBg.shadow = new createjs.Shadow(BUTTON_BACKGROUND_SHADOW, 2, 2, 8 );
+		optionPanelObj.addChild(panelBg);
+
+		for(var i = 0; i < itemNames.length; i++) {
+			optionRowObj[i] = new createjs.Container();
+			var rowBg = new createjs.Shape();
+			var rowText = new createjs.Text(itemNames[i], "bold " + OPTION_TEXT_SIZE + "px Helvetica", ITEM_TEXT_COLOR);
+			rowText.x = OPTION_TEXT_SIZE/3|0;
+			rowText.y = (OPTION_AREA_Y - rowText.getBounds().height)/2|0;
+			optionRowObj[i].addChild(rowBg, rowText);
+			optionRowObj[i].x = 0;
+			optionRowObj[i].y = OPTION_AREA_Y * i;
+			optionRowObj[i].myId = i;
+			optionRowObj[i].on('click', optionClick);
+			optionRowObj[i].on('mouseover', optionMouseOver);
+			optionRowObj[i].on('mouseout', optionMouseOut);
+			optionPanelObj.addChild(optionRowObj[i]);
+			paintOptionRow(i, i == _itemList[0].activeItem);
+		}
+
+		optionPanelObj.x = dropdownX;
+		optionPanelObj.visible = false;
+		_stage.addChild(optionPanelObj);
+	}
+
+	function paintOptionRow(id, active)
+	{
+		var rowBg = optionRowObj[id].getChildAt(0);
+		var rowText = optionRowObj[id].getChildAt(1);
+		rowBg.graphics.clear().beginFill(active ? OPTION_HOVER_COLOR : OPTION_COLOR)
+			.drawRect(0, 0, dropdownW, OPTION_AREA_Y).endFill();
+		rowText.color = active ? "black" : ITEM_TEXT_COLOR;
+	}
+
+	function paintAllOptions()
+	{
+		for(var i = 0; i < optionRowObj.length; i++) {
+			paintOptionRow(i, i == _itemList[0].activeItem);
+		}
+	}
+
+	function setDropdownOpen(open)
+	{
+		dropdownOpen = open;
+		optionPanelObj.visible = open;
+		if(open) {
+			var panelH = OPTION_AREA_Y * itemNames.length;
+			var belowY = dropdownY + ITEM_AREA_Y + 4*_scale;
+			if(belowY + panelH > screenY1) {
+				optionPanelObj.y = dropdownY - panelH - 4*_scale;
+			} else {
+				optionPanelObj.y = belowY;
+			}
+			paintAllOptions();
+			moveChild2Top(_stage, optionPanelObj);
+		}
+		_stage.update();
+	}
+
+	function optionClick()
+	{
+		_itemList[0].activeItem = this.myId;
+		updateDropdownLabel();
+		setDropdownOpen(false);
+		confirmSelect();
+	}
+
+	function optionMouseOver()
+	{
+		_itemList[0].activeItem = this.myId;
+		paintAllOptions();
+		_stage.cursor = 'pointer';
+		_stage.update();
+	}
+
+	function optionMouseOut()
+	{
+		_stage.cursor = 'default';
+		_stage.update();
+	}
+
+	function createPlayButton()
+	{
+		playButtonObj = new createjs.Container();
+		var playW = playTextObj.getBounds().width + ITEM_TEXT_SIZE;
+			
+		var border = new createjs.Shape();
+		border.graphics.beginFill(BUTTON_BACKGROUND_COLOR)
+			.drawRoundRect(-BUTTON_BORDER_SIZE, -BUTTON_BORDER_SIZE, 
+			playW+BUTTON_BORDER_SIZE*2, ITEM_AREA_Y+BUTTON_BORDER_SIZE*2,BUTTON_ROUND_RADIUD).endFill();
+			
+		var button = new createjs.Shape();
+		button.graphics.beginFill(BUTTON_COLOR).drawRoundRect(0, 0, 
+			playW, ITEM_AREA_Y,BUTTON_ROUND_RADIUD).endFill();
+			
+		playTextObj.textAlign = "center";
+		playTextObj.x = playW/2|0;
+		playTextObj.y = (ITEM_AREA_Y - playTextObj.getBounds().height)/2|0;
+			
+		playButtonObj.addChild(border, button, playTextObj);
+		playButtonObj.x = startX+(menuX - playW)/2|0;
+		playButtonObj.y = dropdownY + ITEM_AREA_Y + ITEM_GAP_Y;
+
+		playButtonObj.on('click', function() {
+			if(dropdownOpen) setDropdownOpen(false);
+			confirmSelect();
+		});
+		playButtonObj.on('mouseover', function() {
+			var border = playButtonObj.getChildAt(0);
+			border.graphics.clear().beginFill(BUTTON_BORDER_COLOR)
+				.drawRoundRect(-BUTTON_BORDER_SIZE, -BUTTON_BORDER_SIZE, 
+				playW+BUTTON_BORDER_SIZE*2, ITEM_AREA_Y+BUTTON_BORDER_SIZE*2,BUTTON_ROUND_RADIUD).endFill();
+			playTextObj.shadow = new createjs.Shadow(TITLE_TEXT_SHADOW_COLOR, 2, 2, 10 );
+			_stage.cursor = 'pointer';
+			_stage.update();
+		});
+		playButtonObj.on('mouseout', function() {
+			var border = playButtonObj.getChildAt(0);
+			border.graphics.clear().beginFill(BUTTON_BACKGROUND_COLOR)
+				.drawRoundRect(-BUTTON_BORDER_SIZE, -BUTTON_BORDER_SIZE, 
+				playW+BUTTON_BORDER_SIZE*2, ITEM_AREA_Y+BUTTON_BORDER_SIZE*2,BUTTON_ROUND_RADIUD).endFill();
+			playTextObj.shadow = null;
+			_stage.cursor = 'default';
+			_stage.update();
+		});
+		_stage.addChild(playButtonObj);
+	}
+
+	function closeBox()
+	{
+		 _itemList[0].activeItem = activeItemBackup;
+		restoreKeyHandler(saveKeyStateObj);
+		removeAllObj();
+		_stage.enableMouseOver(0);
+		if(_closeCallBack) _closeCallBack(_args);
+	}
+	
+	function removeAllObj()
+	{
+		_stage.removeChild(coverBackgroundObj, titleTextObj, background1Obj, background2Obj);
+		_stage.removeChild(dropdownObj, optionPanelObj, playButtonObj);
+		if(closeIconObj) _stage.removeChild(closeIconObj);
+		_stage.update();
+	}
+
+	function confirmSelect()
+	{
+		restoreKeyHandler(saveKeyStateObj);
+		removeAllObj();
+		_stage.cursor = 'default';
+		_stage.enableMouseOver(0);
+		if(_itemList[_itemList[0].activeItem+1].activeFun) {
+			_itemList[_itemList[0].activeItem+1].activeFun(_itemList[0].activeItem, _args);
+		}
+	}
+
+	function handleSelectKeyDown(event) 
+	{
+		if(!event){ event = window.event; }
+		if(event.shiftKey || event.ctrlKey) return false;
+
+		switch(event.keyCode) {
+		case KEYCODE_UP: 
+			if(--_itemList[0].activeItem < 0) _itemList[0].activeItem = itemNames.length-1;
+			updateDropdownLabel();
+			if(dropdownOpen) paintAllOptions();
+			_stage.update();
+			break;
+		case KEYCODE_DOWN: 
+			if(++_itemList[0].activeItem > (itemNames.length-1)) _itemList[0].activeItem = 0;
+			updateDropdownLabel();
+			if(dropdownOpen) paintAllOptions();
+			_stage.update();
+			break;
+		case KEYCODE_ENTER:
+			if(dropdownOpen) {
+				updateDropdownLabel();
+				setDropdownOpen(false);
+			}
+			confirmSelect();	
+			break;	
+		case KEYCODE_ESC:
+			if(dropdownOpen) {
+				setDropdownOpen(false);
+			} else if(closeIconObj != null) {
+				closeBox();
+			}
+			break;	
+		default:
+			break;	
+		}
+		return false;
+	}	
+}
+
 function mainMenuClose(callbackFun)
 {
 	if(callbackFun) callbackFun();
@@ -1633,12 +2020,12 @@ function playDataToTitleName(verId)
 
 function mainMenu(callbackFun)
 {	
-	menuDialog(" Select Game Version ", gameVersionMenuList, mainStage, tileScale, 0, mainMenuClose, callbackFun);
+	menuSelectDialog(" Select Game Version ", gameVersionMenuList, mainStage, tileScale, 0, mainMenuClose, callbackFun);
 }
 
 function gameVersionMenu(id, callbackFun)
 {
-	menuDialog(" Select Game Version ", gameVersionMenuList, mainStage, tileScale, 1, mainMenuClose, callbackFun);
+	menuSelectDialog(" Select Game Version ", gameVersionMenuList, mainStage, tileScale, 1, mainMenuClose, callbackFun);
 }
 
 //set main menu id from playData
