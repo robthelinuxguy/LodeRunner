@@ -12,10 +12,21 @@
 ### * PLAY it here:
 <a target="_blank" href="https://robthelinuxguy.github.io/LodeRunner/">https://robthelinuxguy.github.io/LodeRunner/</a>
 
+### * Current Levels:
+- Classic Lode Runner (150 Levels)
+- Professional Lode Runner (150 Levels)
+- Revenge of Lode Runner (78 Levels)
+- Lode Runner Fan Book (88 Levels)
+- Championship Lode Runner (51 Levels)
+- Sneaky Levels (30 Levels)
+- Big Red Apple Levels (100 Levels)
+- Fred Pence Levels (150 Levels)
+
+
 ### Play on a Local Machine
 A simple web server is required to play Lode Runner on a local machine.
 Open a web browser and go to "http://127.0.0.1:8080/lodeRunner.html". (use the correct Port #)
 <br>
-#### Forked from the amazing work from https://github.com/SimonHung : https://github.com/SimonHung/LodeRunner_TotalRecall
+#### Forked from the amazing work by https://github.com/SimonHung : https://github.com/SimonHung/LodeRunner_TotalRecall
 
 "Lode Runner" is a trademark of Tozai Games. This project is unaffiliated with and unendorsed by Tozai Games or any other rights holder.
