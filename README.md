@@ -18,7 +18,7 @@
 - Revenge of Lode Runner (78 Levels)
 - Lode Runner Fan Book (88 Levels)
 - Championship Lode Runner (51 Levels)
-- Sneaky Levels (30 Levels)
+- Sneaky & Hyper Levels (110 Levels)
 - Big Red Apple Levels (100 Levels)
 - Fred Pence Levels (150 Levels)
 

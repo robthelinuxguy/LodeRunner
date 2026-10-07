@@ -51,7 +51,7 @@ var championInfo = [
 
 //ref: https://www.stephen.com/other/other.html
 var sneakyInfo = [
-	{type: 'TITLE', contain: " Sneaky Levels " },
+	{type: 'TITLE', contain: " Sneaky and Hyper Levels " },
 	{type: 'TEXT' , contain: "Release year : 1997"},
 	{type: 'TEXT' , contain: "Platform : Macintosh"},
 	{type: 'TEXT' , contain: "Publisher : Stephen Linhart" },

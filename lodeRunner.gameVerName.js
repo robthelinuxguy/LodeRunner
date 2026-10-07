@@ -1,1 +1,1 @@
-var gameVersionName = [ " Classic Lode Runner ", " Championship Lode Runner ", " Professional Lode Runner ", " Revenge of Lode Runner ", " Lode Runner Fan Book ", " Sneaky Levels ", " Big Red Apple Levels ", " Fred Pence Levels " ];
+var gameVersionName = [ " Classic Lode Runner ", " Championship Lode Runner ", " Professional Lode Runner ", " Revenge of Lode Runner ", " Lode Runner Fan Book ", " Sneaky and Hyper Levels ", " Big Red Apple Levels ", " Fred Pence Levels " ];
