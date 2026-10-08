@@ -5,7 +5,10 @@
 
 #### Lode Runner is a legendary 1983 puzzle-platform video game developed by Douglas E. Smith and originally published by Brøderbund Software. Renowned for its highly strategic gameplay, it was one of the earliest games to blend fast-paced action with intense puzzle-solving. It is also famous for being one of the first video games to include a built-in level editor, allowing players to design and share their own custom stages.
 
-#### We have added more levels and will soon have the abilty to add new levels.  This version works on tablets as well.
+https://en.wikipedia.org/wiki/Lode_Runner
+
+
+#### We have added more levels and will soon have the ability to add new levels.  This version works on tablets as well.
 
 #### Have a comment or want to add a new level?  Just use https://github.com/robthelinuxguy/LodeRunner/issues
 
@@ -16,8 +19,8 @@
 - Classic Lode Runner (150 Levels)
 - Professional Lode Runner (150 Levels)
 - Revenge of Lode Runner (78 Levels)
-- Lode Runner Fan Book (88 Levels)
-- Championship Lode Runner (51 Levels)
+- Lode Runner Fan Book (89 Levels)
+- Championship Lode Runner (50 Levels)
 - Sneaky & Hyper Levels (110 Levels)
 - Big Red Apple Levels (100 Levels)
 - Fred Pence Levels (150 Levels)
