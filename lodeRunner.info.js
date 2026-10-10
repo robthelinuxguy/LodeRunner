@@ -83,6 +83,13 @@ var fredPenceInfo = [
 
 //=========================================================================================
 
+var superLRInfo = [
+	{type: 'TITLE', contain: " Super LR Levels " },
+	{type: 'TEXT' , contain: "From : Super LR" },
+	{type: 'TEXT' , contain: "Platform : Lode Runner" },
+	{type: 'TEXT' , contain: "Difficulty : \u2605 \u2605 \u2605 \u2605 \u2605" } //★ ★ ★ ★ ★
+];
+
 var editInfo = [
 	{type: 'TITLE', contain: "Edit Custom Level"},
 	{type: 'TEXT' , contain: "NEW : New or clear editing level"},
