@@ -1945,7 +1945,8 @@ var playVersionInfo = [
 	{ id:2, verData: championData, name: gameVersionName[1], info: championInfo },
 	{ id:6, verData: sneakyData,   name: gameVersionName[5], info: sneakyInfo },
 	{ id:7, verData: bigRedAppleData, name: gameVersionName[6], info: bigRedAppleInfo },
-	{ id:8, verData: fredPenceData, name: gameVersionName[7], info: fredPenceInfo }
+	{ id:8, verData: fredPenceData, name: gameVersionName[7], info: fredPenceInfo },
+	{ id:9, verData: superLRIData, name: gameVersionName[8], info: superLRInfo }
 ];
 
 var customItemInfo = { id:999, name:" Custom Levels " };

@@ -19,11 +19,12 @@ https://en.wikipedia.org/wiki/Lode_Runner
 - Classic Lode Runner (150 Levels)
 - Professional Lode Runner (150 Levels)
 - Revenge of Lode Runner (78 Levels)
-- Lode Runner Fan Book (89 Levels)
+- Lode Runner Fan Book (90 Levels)
 - Championship Lode Runner (50 Levels)
 - Sneaky & Hyper Levels (110 Levels)
 - Big Red Apple Levels (100 Levels)
 - Fred Pence Levels (150 Levels)
+- Super LR Levels (150 Levels)
 
 
 ### Play on a Local Machine
