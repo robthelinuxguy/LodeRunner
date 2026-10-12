@@ -361,7 +361,15 @@ function selectDialog(_titleName, _checkBitmap, _levelData, _activeLevel, _scree
 	var SLIDE_AREA_X = (SLIDE_GAP_X*2+SELECT_SIZE_X)*SLIDE_ITEM_X;
 	var SLIDE_AREA_Y = (SLIDE_GAP_Y*2+SELECT_SIZE_Y)*SLIDE_ITEM_Y;
 
-	var CANVAS_SIZE_X = (BORDER1+BORDER2)*2 + SLIDE_AREA_X;
+	//-------------------------------------------------
+	// vertical scroll bar (right of the level slide area)
+	//-------------------------------------------------
+	var SCROLL_BAR_GAP_X = 4 * _scale;   //gap between slide area and scroll bar
+	var SCROLL_BAR_SIZE_X = 16 * _scale; //scroll bar thickness
+	var SCROLL_BAR_AREA_X = SCROLL_BAR_GAP_X + SCROLL_BAR_SIZE_X;
+	var SCROLL_BAR_MIN_THUMB_Y = 20 * _scale; //smallest thumb height
+
+	var CANVAS_SIZE_X = (BORDER1+BORDER2)*2 + SLIDE_AREA_X + SCROLL_BAR_AREA_X;
 	var CANVAS_SIZE_Y = TOP_BORDER1 + TOP_BORDER2 + BORDER2 + SLIDE_AREA_Y +BORDER1+BORDER2;
 
 	var BACKGROUND_COLOR = "#ff5050";
@@ -376,6 +384,11 @@ function selectDialog(_titleName, _checkBitmap, _levelData, _activeLevel, _scree
 
 	var SLIDE_BACKGROUND = "#EEEEFF";
 	var SLIDE_BOUNDLINE_COLOR = "red";
+
+	var SCROLL_BAR_TRACK_COLOR = "#dcdcec";
+	var SCROLL_BAR_TRACK_LINE_COLOR = "#9a9ab0";
+	var SCROLL_BAR_THUMB_COLOR = "#8080ff";
+	var SCROLL_BAR_THUMB_OVER_COLOR = "gold";
 
 	var SELECT_TEXT_COLOR = "black";
 	var SELECT_TEXT_ACTIVE_COLOR = "red";
@@ -398,6 +411,7 @@ function selectDialog(_titleName, _checkBitmap, _levelData, _activeLevel, _scree
 	var coverBackgroundObj;
 	var dialogStage;
 	var slider;
+	var scrollBar, scrollBarThumb;
 	var boundLine1, boundLine2;
 
 	var tabs = [], tabsLine;
@@ -696,6 +710,11 @@ function selectDialog(_titleName, _checkBitmap, _levelData, _activeLevel, _scree
 		var firstPressMoveY = 0; //keep  Y position while first press move
 		var closeClicked = 0, closeOver = 0;
 
+		var scrollBarThumbY = 0;     //thumb top, from the top of the track
+		var scrollBarThumbH = 0;     //thumb height
+		var scrollBarThumbRange = 0; //distance the thumb can travel
+		var scrollBarDragY = 0;      //mouse offset inside the thumb while dragging
+
 		var activeItemY = -1; //for scroll to active Item
 
 
@@ -704,6 +723,8 @@ function selectDialog(_titleName, _checkBitmap, _levelData, _activeLevel, _scree
 		function init()
 		{
 			var diffY;
+
+			if(scrollBar) { dialogStage.removeChild(scrollBar); scrollBar = null; }
 
 			slider.removeAllChildren();
 			slider.removeAllEventListeners();
@@ -747,6 +768,7 @@ function selectDialog(_titleName, _checkBitmap, _levelData, _activeLevel, _scree
 					evt.currentTarget.y = minSliderY;
 					boundLine2.alpha = 1;
 				}
+				updateScrollBar();
 				dialogStage.update();
 			});
 
@@ -769,6 +791,7 @@ function selectDialog(_titleName, _checkBitmap, _levelData, _activeLevel, _scree
 					evt.currentTarget.y -= (blockSizeY - mod); //shift up
 				}
 
+				updateScrollBar();
 				dialogStage.update();
 			});
 
@@ -777,9 +800,123 @@ function selectDialog(_titleName, _checkBitmap, _levelData, _activeLevel, _scree
 			if(activeItemY > 0) { //scroll to active level
 				slider.y -= activeItemY*(SLIDE_GAP_Y*2+SELECT_SIZE_Y);
 			}
+			//keep the slide area inside its bounds (needed by the scroll bar)
+			if(slider.y > maxSliderY) slider.y = maxSliderY;
+			else if(slider.y < minSliderY) slider.y = minSliderY;
+
+			createScrollBar();
+			updateScrollBar();
 
 			dialogStage.update();
 			enableMouseWheel();
+		}
+
+		//==============================================================
+		// vertical scroll bar of the slide area
+		// drag the thumb / click the track / mouse wheel all move "slider"
+		//==============================================================
+		function createScrollBar()
+		{
+			var trackH = SLIDE_AREA_Y;
+			var track = new createjs.Shape();
+
+			track.graphics.beginFill(SCROLL_BAR_TRACK_COLOR)
+				 .drawRoundRect(0, 0, SCROLL_BAR_SIZE_X, trackH, SCROLL_BAR_SIZE_X/2).endFill();
+			track.graphics.setStrokeStyle(1).beginStroke(SCROLL_BAR_TRACK_LINE_COLOR)
+				 .drawRoundRect(0, 0, SCROLL_BAR_SIZE_X, trackH, SCROLL_BAR_SIZE_X/2).endStroke();
+			track.on("click", scrollBarTrackClick);
+			track.on("mouseover", function() { if(scrollBarThumbRange > 0) dialogStage.cursor = 'pointer'; });
+			track.on("mouseout", function() { dialogStage.cursor = 'default'; });
+
+			scrollBarThumb = new createjs.Shape();
+			scrollBarThumb.on("mouseover", function() { drawScrollBarThumb(1); dialogStage.cursor = 'pointer'; });
+			scrollBarThumb.on("mouseout", function() { drawScrollBarThumb(0); dialogStage.cursor = 'default'; });
+			scrollBarThumb.on("mousedown", function(evt) {
+				scrollBarDragY = evt.stageY - scrollBar.y - scrollBarThumbY; //keep the grab offset
+			});
+			scrollBarThumb.on("pressmove", scrollBarThumbMove);
+			scrollBarThumb.on("pressup", scrollBarThumbUp);
+
+			scrollBar = new createjs.Container();
+			scrollBar.addChild(track, scrollBarThumb);
+			scrollBar.x = BORDER1 + BORDER2 + SLIDE_AREA_X + SCROLL_BAR_GAP_X;
+			scrollBar.y = TOP_BORDER1 + TOP_BORDER2 + BORDER2;
+			dialogStage.addChild(scrollBar);
+			moveChild2Top(dialogStage, scrollBar);
+		}
+
+		//draw the thumb at its current position (scroll bar local coordinates)
+		function drawScrollBarThumb(mouseOver)
+		{
+			var g = scrollBarThumb.graphics;
+
+			g.clear();
+			g.beginFill(mouseOver?SCROLL_BAR_THUMB_OVER_COLOR:SCROLL_BAR_THUMB_COLOR)
+			 .drawRoundRect(0, scrollBarThumbY, SCROLL_BAR_SIZE_X, scrollBarThumbH, SCROLL_BAR_SIZE_X/2).endFill();
+		}
+
+		//keep the thumb in sync with slider.y (call it after any scroll)
+		function updateScrollBar()
+		{
+			var trackH = SLIDE_AREA_Y;
+			var offset, total;
+
+			if(slideY <= trackH) { //every level of this page is visible, no scroll bar needed
+				scrollBar.visible = false;
+				scrollBarThumbH = scrollBarThumbRange = 0;
+				return;
+			}
+			scrollBar.visible = true;
+
+			scrollBarThumbH = trackH * trackH / slideY;
+			if(scrollBarThumbH < SCROLL_BAR_MIN_THUMB_Y) scrollBarThumbH = SCROLL_BAR_MIN_THUMB_Y;
+			if(scrollBarThumbH > trackH) scrollBarThumbH = trackH;
+			scrollBarThumbRange = trackH - scrollBarThumbH;
+
+			offset = maxSliderY - slider.y; //0 : top of the level list
+			total = maxSliderY - minSliderY;
+			if(offset < 0) offset = 0;
+			else if(offset > total) offset = total;
+
+			scrollBarThumbY = (total > 0)? (offset/total) * scrollBarThumbRange: 0;
+			drawScrollBarThumb(0);
+		}
+
+		function scrollBarThumbMove(evt)
+		{
+			var thumbTop = evt.stageY - scrollBar.y - scrollBarDragY;
+
+			if(thumbTop < 0) thumbTop = 0;
+			else if(thumbTop > scrollBarThumbRange) thumbTop = scrollBarThumbRange;
+
+			scrollBarThumbY = thumbTop;
+			slider.y = maxSliderY - (scrollBarThumbRange > 0?
+					(thumbTop/scrollBarThumbRange)*(maxSliderY-minSliderY):0);
+
+			boundLine1.alpha = boundLine2.alpha = 0;
+			dialogStage.cursor =  "url('cursor/closedhand.cur'), auto";
+			drawScrollBarThumb(1);
+			dialogStage.update();
+		}
+
+		function scrollBarThumbUp()
+		{
+			//never let the release of the thumb select a level
+			sliderMoved = firstPressMoveY = closeClicked = 0;
+			dialogStage.cursor = 'pointer';
+		}
+
+		//click above/below the thumb scrolls a full screen of levels
+		function scrollBarTrackClick(evt)
+		{
+			if(scrollBarThumbRange <= 0) return;
+
+			slider.y += ((evt.stageY - scrollBar.y) < scrollBarThumbY)? SLIDE_AREA_Y: -SLIDE_AREA_Y;
+			if(slider.y > maxSliderY) slider.y = maxSliderY;
+			else if(slider.y < minSliderY) slider.y = minSliderY;
+
+			updateScrollBar();
+			dialogStage.update();
 		}
 
 		function createSelectLevel(x, y)
@@ -877,6 +1014,7 @@ function selectDialog(_titleName, _checkBitmap, _levelData, _activeLevel, _scree
 				slideY = (SLIDE_GAP_Y*2+SELECT_SIZE_Y) * (selectItemY < SLIDE_ITEM_Y?SLIDE_ITEM_Y:selectItemY);
 				minSliderY = slideStartY + SLIDE_AREA_Y - slideY;
 				if(slider.y < minSliderY) slider.y = minSliderY; //shift slider
+				updateScrollBar();
 			}
 
 			//(3) redraw tabs page
@@ -1089,6 +1227,7 @@ function selectDialog(_titleName, _checkBitmap, _levelData, _activeLevel, _scree
 				slider.y = minSliderY;
 				//boundLine2.alpha = 1;
 			}
+			updateScrollBar();
 			dialogStage.update();
 		}
 
@@ -1249,7 +1388,8 @@ function selectDialog(_titleName, _checkBitmap, _levelData, _activeLevel, _scree
 	{
 		var titleText = new createjs.Text(_titleName,
 					"italic bold " + TITLE_TEXT_SIZE + "px Helvetica",TITLE_TEXT_COLOR);
-		titleText.x = (CANVAS_SIZE_X - titleText.getBounds().width)/2|0;
+		//center the title over the level grid, not over the scroll bar
+		titleText.x = (BORDER1+BORDER2 + SLIDE_AREA_X/2 - titleText.getBounds().width/2)|0;
 		titleText.y = (TOP_BORDER1 - titleText.getBounds().height)/2|0;
 		titleText.shadow = new createjs.Shadow(TITLE_TEXT_SHADOW_COLOR, 2, 2, 10 );
 		dialogStage.addChild(titleText);
