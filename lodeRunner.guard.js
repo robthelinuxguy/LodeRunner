@@ -22,12 +22,99 @@ var moveId = 0;    //current guard id
 
 var numOfMoveItems = movePolicy[0].length;
 
+//******************************************************************************
+// guard speed setting (see the "Settings" item of the game menu)
+//
+// The move policy above is the original arcade behavior: the guards only get a
+// move step on some of the game ticks, so they are always slower than the
+// runner (which moves on every tick). The setting below lets the player pick
+// one of two faster behaviors: the intermediate one gives each guard 3 steps
+// out of every 4 ticks (75% of the runner), and the fastest one gives every
+// guard one step per tick (exactly as fast as the runner).
+//******************************************************************************
+var guardSpeedMode = GUARD_SPEED_DEFAULT;
+
+//fraction of a move step that is left over from the previous tick. The 75%
+//setting cannot be written into the 6-tick move policy table above (75% of an
+//odd guard count is not a whole number of steps per cycle), so the steps are
+//spread evenly over the ticks with this accumulator instead.
+var guardMoveAccumulator = 0;
+
+//original move policy table (never modified), used to get a clean table back
+var originalMovePolicy = [];
+
+//default move policy of the current AI version
+var defaultMovePolicy = [];
+
+for(var policyCount = 0; policyCount < movePolicy.length; policyCount++) {
+	originalMovePolicy[policyCount] = [];
+	defaultMovePolicy[policyCount] = [];
+	for(var policyItem = 0; policyItem < numOfMoveItems; policyItem++) {
+		originalMovePolicy[policyCount][policyItem] = movePolicy[policyCount][policyItem];
+		defaultMovePolicy[policyCount][policyItem] = movePolicy[policyCount][policyItem];
+	}
+}
+
+//get back the original move policy table (remove the guard speed setting)
+function restoreDefaultMovePolicy()
+{
+	for(var count = 0; count < movePolicy.length; count++) {
+		for(var i = 0; i < numOfMoveItems; i++)
+			movePolicy[count][i] = originalMovePolicy[count][i];
+	}
+}
+
+//remember the default move policy of the current AI version,
+//must be called while movePolicy still holds the default values
+function saveDefaultMovePolicy()
+{
+	for(var count = 0; count < movePolicy.length; count++) {
+		for(var i = 0; i < numOfMoveItems; i++)
+			defaultMovePolicy[count][i] = movePolicy[count][i];
+	}
+}
+
+//move steps one guard takes per tick for the current setting, as a share of
+//the runner (which takes one step per tick).
+//null means: keep the original arcade move policy table
+function guardSpeedRatio()
+{
+	switch(guardSpeedMode) {
+	case GUARD_SPEED_INTERMEDIATE:   return GUARD_SPEED_INTERMEDIATE_RATIO;
+	case GUARD_SPEED_SAME_AS_RUNNER: return 1;
+	}
+	return null;
+}
+
+//speed of the guard walking animation for the current setting
+function guardWalkSpeed()
+{
+	var ratio = guardSpeedRatio();
+	return (ratio == null)? GUARD_SPEED: RUNNER_SPEED * ratio;
+}
+
+//apply the guard speed setting to the move policy and to the guard sprite animation
+function applyGuardSpeedMode()
+{
+	//the two faster settings drive the guards from guardSpeedRatio(), so the
+	//move policy table must hold the untouched default values
+	for(var count = 0; count < movePolicy.length; count++) {
+		for(var i = 0; i < numOfMoveItems; i++)
+			movePolicy[count][i] = defaultMovePolicy[count][i];
+	}
+	
+	guardMoveAccumulator = 0; //start the new setting on a clean tick
+	
+	setGuardSpriteSpeed(guardWalkSpeed());
+}
+
 //********************************
 //initial guard start move value 
 //********************************
 function initGuardVariable()
 {
 	moveOffset = moveId = 0;
+	guardMoveAccumulator = 0;
 }
 
 function moveGuard()
@@ -38,8 +125,16 @@ function moveGuard()
 	
 	if(!guardCount) return; //no guard
 	
-	if( ++moveOffset >= numOfMoveItems ) moveOffset = 0;
-	moves = movePolicy[guardCount][moveOffset];  // get next moves 
+	var ratio = guardSpeedRatio();
+	
+	if(ratio == null) { //original arcade move policy table
+		if( ++moveOffset >= numOfMoveItems ) moveOffset = 0;
+		moves = movePolicy[guardCount][moveOffset];  // get next moves 
+	} else { //guard speed setting: give every guard the same number of steps
+		guardMoveAccumulator += ratio * guardCount;
+		moves = Math.floor(guardMoveAccumulator);
+		guardMoveAccumulator -= moves;
+	}
  
 	while ( moves-- > 0) {                       // slows guard relative to runner
 		if(++moveId >= guardCount) moveId = 0; 
