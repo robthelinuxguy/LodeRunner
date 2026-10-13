@@ -149,6 +149,15 @@ var MAX_HISCORE_RECORD = 10, MAX_HISCORE_NAME_LENGTH = 12;
 //===========================
 var PLAY_DATA_USERDEF = 999;
 
+//===============================
+// Define value for guard speed 
+//===============================
+var GUARD_SPEED_DEFAULT = 0;          //original behavior: guards are slower than the runner
+var GUARD_SPEED_SAME_AS_RUNNER = 1;   //guards move at the speed of the runner
+var GUARD_SPEED_INTERMEDIATE = 2;     //guards move at 75% of the speed of the runner
+
+var GUARD_SPEED_INTERMEDIATE_RATIO = 0.75; //intermediate setting: share of the runner's speed
+
 //================================================
 // Define themes string also as theme folder name 
 //================================================
@@ -189,3 +198,5 @@ var STORAGE_THEME_COLOR = "loderunner_color_";
 
 var STORAGE_REPEAT_ACTION = "loderunner_actRepeat";
 var STORAGE_GAMEPAD_MODE = "loderunner_gamepadMode";
+
+var STORAGE_GUARD_SPEED_MODE = "loderunner_guardSpeedMode";

@@ -491,6 +491,28 @@ function setGamepadMode()
 	setStorage(STORAGE_GAMEPAD_MODE, gamepadMode); 	
 }
 
+//============================================================
+// Guard speed: default / intermediate (75%) / same as runner
+//============================================================
+function getGuardSpeedMode()
+{
+	var savedValue = getStorage(STORAGE_GUARD_SPEED_MODE);
+	
+	guardSpeedMode = GUARD_SPEED_DEFAULT; //guards are slower than the runner
+	
+	if(savedValue != null) {
+		savedValue = parseInt(savedValue);
+		if(savedValue == GUARD_SPEED_INTERMEDIATE || savedValue == GUARD_SPEED_SAME_AS_RUNNER)
+			guardSpeedMode = savedValue;
+	}
+	return guardSpeedMode;
+}
+
+function setGuardSpeedMode()
+{
+	setStorage(STORAGE_GUARD_SPEED_MODE, guardSpeedMode); 	
+}
+
 //====================
 // Theme color state
 //====================

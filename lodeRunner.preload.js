@@ -465,6 +465,8 @@ function setSpeedByAiVersion()
 	// Original policy for one guard is [0, 1, 1] ==> 2/3 speed of runner 
 	// while AI_VERSION >= 3 change policy to [ 0, 1, 0, 1, 0, 1 ] ==> 1/2 speed of runner
 	//------------------------------------------------------------------------------------
+	restoreDefaultMovePolicy(); //remove the guard speed setting (it is applied again below)
+	
 	if(curAiVersion < 3) {
 		movePolicy[1] = [0, 1, 1, 0, 1, 1];
 		maxGuard = MAX_OLD_GUARD;
@@ -473,14 +475,19 @@ function setSpeedByAiVersion()
 		maxGuard = MAX_NEW_GUARD;           //change max guard 
 	}
 	
+	saveDefaultMovePolicy(); //remember the default guard move policy of this AI version
+	
 	themeDataReset(1); //4/16/2015
 	createHoleObj();  //6/27/2016
+	
+	applyGuardSpeedMode(); //apply the guard speed setting to the new sprite sheet
 }
 
 function themeDataReset(resetAll)
 {
 	if(resetAll) createSoundInstance(); //Base on current theme
 	createSpriteSheet();   //Base on theme & Ai Version
+	setGuardSpriteSpeed(guardWalkSpeed()); //Base on the guard speed setting
 }
 
 function createSpriteSheet()
@@ -622,6 +629,27 @@ function createGuardObj(imageName)
 	});
 	
 	return guard;
+}
+
+//===============================================
+// guard walking animation speed (guard speed setting)
+// The guard sprite sheet is built with GUARD_SPEED, this function changes the
+// walking animations of the existing sprite sheets at run time.
+//===============================================
+var guardWalkAnimations = [ "runRight", "runLeft", "runUpDn", "barRight", "barLeft" ];
+
+function setGuardSpriteSpeed(speed)
+{
+	var sheets = [guardData, redhatData];
+	var anim;
+	
+	for(var s = 0; s < sheets.length; s++) {
+		if(typeof sheets[s].getAnimation != "function") continue; //sprite sheet not built yet
+		for(var i = 0; i < guardWalkAnimations.length; i++) {
+			anim = sheets[s].getAnimation(guardWalkAnimations[i]);
+			if(anim) anim.speed = speed;
+		}
+	}
 }
 	
 function createHoleObj()

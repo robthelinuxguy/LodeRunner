@@ -1685,7 +1685,7 @@ function menuDialog(_titleName, _itemList, _stage, _scale, _closeIconEnable, _cl
 	}
 }
 
-function menuSelectDialog(_titleName, _itemList, _stage, _scale, _closeIconEnable, _closeCallBack, _args)
+function menuSelectDialog(_titleName, _itemList, _stage, _scale, _closeIconEnable, _closeCallBack, _args, _labelName)
 {
 	var TITLE_TEXT_SIZE = 30 * _scale;
 	var ITEM_TEXT_SIZE = 24 * _scale;
@@ -1695,12 +1695,14 @@ function menuSelectDialog(_titleName, _itemList, _stage, _scale, _closeIconEnabl
 	var TITLE_TEXT_SHADOW_COLOR = "gold";
 
 	var ITEM_TEXT_COLOR = "white";
+	var LABEL_TEXT_COLOR = "gold";
 
 	var TITLE_AREA_Y = TITLE_TEXT_SIZE * 2 | 0;
 
 	var ITEM_AREA_Y = ITEM_TEXT_SIZE * 3/2 | 0;
 	var OPTION_AREA_Y = OPTION_TEXT_SIZE * 5/4 | 0;
 	var ITEM_GAP_Y = ITEM_TEXT_SIZE * 2/3 | 0;
+	var LABEL_GAP_X = ITEM_TEXT_SIZE * 2/3 | 0; //space between the dropdown label and the dropdown
 
 	var BOTTOM_AREA_Y = ITEM_AREA_Y/2|0;
 
@@ -1725,11 +1727,14 @@ function menuSelectDialog(_titleName, _itemList, _stage, _scale, _closeIconEnabl
 	var screenY1 = _stage.canvas.height;
 
 	var titleTextObj, titleWidth, titleHeight;
+	var labelTextObj, labelHeight, labelX;
 	var itemNames = [], maxItemTextWidth;
 	var playTextObj;
 	var menuX, menuY;
 	var startX, startY;
 	var dropdownX, dropdownY, dropdownW;
+	//width taken by the dropdown label (including the gap), 0 when there is no label
+	var labelW = _labelName? LABEL_GAP_X: 0;
 
 	var coverBackgroundObj, background1Obj, background2Obj;
 	var dropdownObj, optionPanelObj, optionRowObj = [], playButtonObj;
@@ -1746,6 +1751,7 @@ function menuSelectDialog(_titleName, _itemList, _stage, _scale, _closeIconEnabl
 		coverParentStage();
 		creatBackground();
 		createTitle();
+		createLabel();
 		createDropdown();
 		createOptionPanel();
 		createPlayButton();
@@ -1789,15 +1795,22 @@ function menuSelectDialog(_titleName, _itemList, _stage, _scale, _closeIconEnabl
 		playTextObj = new createjs.Text(" Select ",  ITEM_TEXT_SIZE + "px Helvetica", ITEM_TEXT_COLOR);
 		var playWidth = playTextObj.getBounds().width + ITEM_TEXT_SIZE;
 		if(maxItemTextWidth < playWidth) maxItemTextWidth = playWidth;
+		
+		if(_labelName) { //the label is drawn at the left of the dropdown, same font as the dropdown
+			var labelMeasure = new createjs.Text(_labelName, "bold " + ITEM_TEXT_SIZE + "px Helvetica", LABEL_TEXT_COLOR);
+			labelW += labelMeasure.getBounds().width;
+		}
 
-		menuX = (maxItemTextWidth > titleWidth? maxItemTextWidth: titleWidth) + TITLE_TEXT_SIZE * 2;
+		menuX = ((maxItemTextWidth + labelW) > titleWidth? (maxItemTextWidth + labelW): titleWidth) + TITLE_TEXT_SIZE * 2;
 		menuY = TITLE_AREA_Y + BOTTOM_AREA_Y + ITEM_AREA_Y + ITEM_GAP_Y + ITEM_AREA_Y;
 
 		startX = (screenX1-menuX)/2|0;
 		startY = (screenY1-menuY)/2|0;
 
 		dropdownW = maxItemTextWidth;
-		dropdownX = startX+(menuX - dropdownW)/2|0;
+		//the label + dropdown group is centered inside the dialog
+		labelX = startX + ((menuX - (dropdownW + labelW))/2|0);
+		dropdownX = labelX + labelW;
 		dropdownY = startY+TITLE_AREA_Y;
 	}
 
@@ -1821,6 +1834,21 @@ function menuSelectDialog(_titleName, _itemList, _stage, _scale, _closeIconEnabl
 		titleTextObj.y = startY + (TITLE_AREA_Y - titleHeight)/2|0;
 		titleTextObj.shadow = new createjs.Shadow(TITLE_TEXT_SHADOW_COLOR, 0, 0, 10 );
 		_stage.addChild(titleTextObj);
+	}
+
+	//title of the dropdown box, drawn at the left of the dropdown and
+	//vertically centered with it
+	function createLabel()
+	{
+		if(!_labelName) return; //no label
+		
+		labelTextObj = new createjs.Text(_labelName, "bold " + ITEM_TEXT_SIZE + "px Helvetica", LABEL_TEXT_COLOR);
+		labelHeight = labelTextObj.getBounds().height;
+		
+		labelTextObj.x = labelX;
+		labelTextObj.y = dropdownY + (ITEM_AREA_Y - labelHeight)/2|0;
+		labelTextObj.shadow = new createjs.Shadow(TITLE_TEXT_SHADOW_COLOR, 1, 1, 6 );
+		_stage.addChild(labelTextObj);
 	}
 
 	function selectedName()
@@ -2017,6 +2045,7 @@ function menuSelectDialog(_titleName, _itemList, _stage, _scale, _closeIconEnabl
 	function removeAllObj()
 	{
 		_stage.removeChild(coverBackgroundObj, titleTextObj, background1Obj, background2Obj);
+		if(labelTextObj) _stage.removeChild(labelTextObj);
 		_stage.removeChild(dropdownObj, optionPanelObj, playButtonObj);
 		if(closeIconObj) _stage.removeChild(closeIconObj);
 		_stage.update();
@@ -2214,7 +2243,8 @@ function gameMenu(callbackFun)
 		{ name: " Challenge Mode ", activeFun: classicPlay },
 		{ name: " Training Mode ",  activeFun: modernPlay },
 //		{ name: " Demo Mode ",      activeFun: demoPlay },
-		{ name: " Change Game Version ",      activeFun: gameVersionMenu }
+		{ name: " Change Game Version ",      activeFun: gameVersionMenu },
+		{ name: " Settings ",     activeFun: settingMenu }
 	];
 
 	var editMenuList = [
@@ -2352,6 +2382,58 @@ function editEdit(id, callbackFun)
 	demoIconObj.disable(1);
 	initShowDataMsg();
 	startEditMode();
+}
+
+//===========================================
+// Setting menu
+//===========================================
+var guardSpeedMenuList = [
+	{ activeItem: 0 }, //row of the current setting
+	{ name: " Default ",      activeFun: selectGuardSpeed },
+	{ name: " Intermediate ", activeFun: selectGuardSpeed },
+	{ name: " Advanced ",     activeFun: selectGuardSpeed }
+];
+
+//menu row order: default (slowest), intermediate (75%), advanced (as fast as the runner)
+var guardSpeedMenuMode = [ GUARD_SPEED_DEFAULT, GUARD_SPEED_INTERMEDIATE, GUARD_SPEED_SAME_AS_RUNNER ];
+
+function guardSpeedMenuRow()
+{
+	for(var i = 0; i < guardSpeedMenuMode.length; i++) {
+		if(guardSpeedMenuMode[i] == guardSpeedMode) return i;
+	}
+	return 0;
+}
+
+function settingMenu(id, callbackFun)
+{
+	guardSpeedMenuList[0].activeItem = guardSpeedMenuRow(); //show the current setting
+	
+	menuSelectDialog("  Settings  ", guardSpeedMenuList, mainStage, tileScale, 1, mainMenuClose, callbackFun, " Enemy Speed ");
+}
+
+//id: the selected menu row, see guardSpeedMenuMode[]
+function selectGuardSpeed(id, callbackFun)
+{
+	if(id < 0 || id >= guardSpeedMenuMode.length) id = 0;
+	
+	guardSpeedMode = guardSpeedMenuMode[id];
+	setGuardSpeedMode();   //save the setting
+	applyGuardSpeedMode(); //change the speed of the guards right now
+	
+	switch(guardSpeedMode) {
+	case GUARD_SPEED_INTERMEDIATE:
+		showTipsText("GUARDS AT 75% SPEED", 2500);
+		break;
+	case GUARD_SPEED_SAME_AS_RUNNER:
+		showTipsText("GUARDS MATCH PLAYER SPEED", 2500);
+		break;
+	default:
+		showTipsText("GUARDS AT DEFAULT SPEED", 2500);
+		break;
+	}
+	
+	if(callbackFun != null) callbackFun();
 }
 
 function helpMenu(callbackFun)

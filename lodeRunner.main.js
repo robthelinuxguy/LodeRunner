@@ -93,6 +93,7 @@ function loadStoreVariable()
 	curTheme = getThemeMode();
 	getThemeColor();
 	getRepeatAction();
+	getGuardSpeedMode();
 	if(getGamepadMode()) gamepadEnable();
 }
 
