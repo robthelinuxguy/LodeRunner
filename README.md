@@ -12,8 +12,13 @@ https://en.wikipedia.org/wiki/Lode_Runner
 
 #### Have a comment or want to add a new level?  Just use https://github.com/robthelinuxguy/LodeRunner/issues
 
-### * PLAY it here:
+### * PLAY it online here:
 <a target="_blank" href="https://robthelinuxguy.github.io/LodeRunner/">https://robthelinuxguy.github.io/LodeRunner/</a>
+
+### * What's new? (Oct 2026)
+- Added over 400 levels
+- Added Speed settings for enemy guards
+- Added scroll bars to level selection (for tablets, phones)
 
 ### * Current Levels:
 - Classic Lode Runner (150 Levels)
