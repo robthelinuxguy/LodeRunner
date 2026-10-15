@@ -2,6 +2,7 @@ var MAX_CONTROLLER = 4;
 
 var gamepadReady = 0;
 var gamepadPollingId = null;
+var gamepadLoopRunning = 0; //only one requestAnimationFrame polling loop is allowed
 var gamepadLastId = -1; //for send to server only
 
 var requestAnimationFrame = window.requestAnimationFrame ||
@@ -36,6 +37,18 @@ function gamepadConnectFun(e)
 		clearInterval(gamepadPollingId); 
 		gamepadPollingId = null; 
 	}
+	gamepadStartLoop();
+}
+
+// Start the polling loop, but never start a second one.
+// "gamepadconnected" can arrive twice for the same device: the real browser event
+// and the one gamepadCheck() generates. A second loop would send every button
+// event twice, so a "don't repeat" key (pause, enter) would cancel itself out.
+function gamepadStartLoop()
+{
+	if(gamepadLoopRunning) return;
+	
+	gamepadLoopRunning = 1;
 	requestAnimationFrame(gamepadRequestState);
 }
 
@@ -43,6 +56,7 @@ function gamepadDisconnectFun(e)
 {
 	console.log("disconnection game port#%d", e.gamepad.index );
 	gamepadReady = 0;
+	gamepadLoopRunning = 0; //let a reconnect start a fresh loop
 	if(!gamepadPollingId) gamepadPollingId = setInterval(gamepadCheck, 500);
 }
 
@@ -87,6 +101,7 @@ function gamepadDisable()
 		gamepadPollingId = null; 
 	}
 	gamepadReady = 0;
+	gamepadLoopRunning = 0; //a later gamepadEnable() must be able to start a new loop
 }
 
 function getLastGamepadInfo()
@@ -214,6 +229,7 @@ function gamepadRequestState()
 		}
 	}
 	if(gamepadReady) requestAnimationFrame(gamepadRequestState);
+	else gamepadLoopRunning = 0;
 }
 
 function buttonPressed(button)
@@ -239,7 +255,10 @@ function sendKeyUp(twinKey, id)
 	
 	var event = {keyCode: key[0], ctrlKey: key[1], shiftKey: key[2]};
 	//console.log("sendKeyUp = %d",keyCode );
-	if(typeof document.onkeydown == "function" ) document.onkeyup(event);
+	//the key up handler may not be installed yet (it is set by selectGame(), the
+	//URL "?game=" start and the demo playback paths only set document.onkeydown),
+	//calling a missing handler here would kill the polling loop with an exception
+	if(typeof document.onkeyup == "function" ) document.onkeyup(event);
 	gamepadLastId = id;
 }
 

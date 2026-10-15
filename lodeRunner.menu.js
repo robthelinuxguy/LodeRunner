@@ -2320,7 +2320,11 @@ function classicPlay(id, callbackFun)
 	soundStop(soundDig);
 	soundStop(soundFall);
 	disableStageClickEvent();
+	//both handlers are needed, selectGame() sets them the same way. The URL
+	//"?game=...&level=..." start comes in here, so without onkeyup a gamepad
+	//button release would call a missing handler and stop the gamepad polling.
 	document.onkeydown = handleKeyDown;
+	document.onkeyup = handleKeyUp;
 	setLastPlayMode();
 	selectIconObj.disable(1);
 	demoIconObj.disable(1);
@@ -2338,6 +2342,7 @@ function modernPlay(id, callbackFun)
 	soundStop(soundFall);
 	disableStageClickEvent();
 	document.onkeydown = handleKeyDown;
+	document.onkeyup = handleKeyUp;
 	setLastPlayMode();
 	initShowDataMsg();
 	startGame();
@@ -2368,6 +2373,7 @@ function editPlay(id, callbackFun)
 
 	disableStageClickEvent();
 	document.onkeydown = handleKeyDown;
+	document.onkeyup = handleKeyUp;
 	setLastPlayMode();
 	selectIconObj.disable(1);
 	demoIconObj.disable(1);

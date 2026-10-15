@@ -111,6 +111,8 @@ function soundPlay(name)
 {
 	if(soundDisable()) return;
 	
+	warnAudioSuspended();
+	
 	if(typeof name == "string") {
 		return createjs.Sound.play(name);
 	} else {
@@ -303,4 +305,60 @@ function resumeAudioContext()
 		console.error("There was an error while trying to resume the SoundJS Web Audio context...");
 		console.error(e);
 	}
+}
+
+//===========================================================================
+// Unlock sound on the first user gesture
+//
+// Chrome keeps an AudioContext created before any user gesture "suspended",
+// and a later key press does not wake it up by itself: resume() must be
+// called from inside a gesture handler. The usual start path does that in
+// stopDemoAndPlay() (cover page key or click), but a "?game=&level=" URL
+// start skips the cover page and starts the level right away, so there the
+// resume was never called and the game stayed mute - the missing sound when
+// the runner picks up a gold bar was the first place it showed up.
+//
+// The listeners are capture phase and do not call preventDefault(), so the
+// game's own document.onkeydown and stage click handlers are not affected.
+//===========================================================================
+var audioUnlockInstalled = 0;
+
+function installAudioUnlock()
+{
+	if(audioUnlockInstalled) return;
+	audioUnlockInstalled = 1;
+
+	if(typeof document == "undefined" || !document.addEventListener) return;
+
+	document.addEventListener("keydown", resumeAudioContextOnGesture, true);
+	document.addEventListener("mousedown", resumeAudioContextOnGesture, true);
+	document.addEventListener("touchstart", resumeAudioContextOnGesture, true);
+}
+
+function resumeAudioContextOnGesture()
+{
+	var ctx = (typeof createjs == "undefined" || !createjs.WebAudioPlugin)? null : createjs.WebAudioPlugin.context;
+
+	if(ctx && ctx.state === "suspended") resumeAudioContext();
+}
+
+//===========================================================================
+// A suspended audio context does not report an error: SoundJS still answers
+// playSucceeded while nothing can be heard. Say it once, instead of leaving a
+// silent game unexplained (this is what a gamepad start looks like, a gamepad
+// press is not a browser user gesture and cannot unlock the sound).
+//===========================================================================
+var audioSuspendWarned = 0;
+
+function warnAudioSuspended()
+{
+	var ctx;
+
+	if(audioSuspendWarned) return;
+
+	ctx = (typeof createjs == "undefined" || !createjs.WebAudioPlugin)? null : createjs.WebAudioPlugin.context;
+	if(!ctx || ctx.state !== "suspended") return;
+
+	audioSuspendWarned = 1;
+	console.warn("Sound is muted: the Web Audio context is suspended by the browser autoplay policy, press a key or click the page to resume it.");
 }
