@@ -73,6 +73,7 @@ function init()
 	initAutoDemoRnd(); //init auto demo random levels
 	
 	loadStoreVariable(); //load data from localStorage
+	installAudioUnlock(); //unlock sound on the first gesture, 10/15/2026
 	initMenuVariable();  //init menu variable
 	urlPlayRequestParse(); //read "?game=" & "?level=" URL parameters
 	
@@ -397,6 +398,11 @@ function urlPlayRequestStart()
 		playData = urlPlayRequest.game;
 		playData2GameVersionMenuId(); //keep the game version menu in sync
 	}
+	
+	//stopDemoAndPlay() unlocks the sound for the normal cover page start,
+	//this start skips it, so do the same here (installAudioUnlock() repeats
+	//it on the first key or click, which is what Chrome asks for)
+	resumeAudioContext();
 	
 	if(playMode == PLAY_MODERN) modernPlay();
 	else {
