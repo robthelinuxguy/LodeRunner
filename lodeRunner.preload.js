@@ -421,7 +421,7 @@ function preloadResource()
 		createMenuBitmapIcon();
 		getFirstPlayInfo();
 		createjs.Ticker.off("tick", preloadTicker); //remove ticker of cover page
-		waitIdleDemo(4000); //wait user key or show demo level
+		if(!urlPlayRequestStart()) waitIdleDemo(4000); //URL parameters start the game right away
 	}
 }
 
