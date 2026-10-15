@@ -74,6 +74,7 @@ function init()
 	
 	loadStoreVariable(); //load data from localStorage
 	initMenuVariable();  //init menu variable
+	urlPlayRequestParse(); //read "?game=" & "?level=" URL parameters
 	
 	getLastPlayInfo();
 	initDemoData(); //get demo data from server
@@ -281,6 +282,131 @@ function getLastPlayInfo()
 	}
 }
 
+//============================================================
+// Play a game version & board from URL parameters
+//   ex: index.html?game=1&level=5
+//   game : game version id, 1 ~ maxPlayId (see the game version menu)
+//          without it the game version that played last is used
+//   level: board number, 1 ~ level count (out of range is clamped)
+//============================================================
+var urlPlayRequest = null; //{ game: playData id, level: board number }, 0 = not specified
+
+function urlPlayParamDecode(str)
+{
+	try {
+		return decodeURIComponent(str.replace(/\+/g, " ")).trim();
+	} catch(e) { //malformed encode, use the raw string
+		return str.trim();
+	}
+}
+
+//"?game=" value -> playData id, 0: not a valid game id
+function urlPlayGameId(gameParam)
+{
+	var i, id;
+	
+	if(!/^[0-9]+$/.test(gameParam)) { //playData id must be a number
+		debug("URL game id is not a number: " + gameParam);
+		return 0;
+	}
+	
+	id = parseInt(gameParam, 10);
+	
+	for(i = 0; i < playVersionInfo.length; i++) {
+		if(playVersionInfo[i].id == id) return id;
+	}
+	
+	debug("URL game id is not found: " + gameParam + ", use 1 ~ " + maxPlayId);
+	return 0;
+}
+
+//"?level=" value -> board number, 0: not a valid number
+function urlPlayLevelNo(levelParam)
+{
+	var no;
+	
+	if(!/^[0-9]+$/.test(levelParam)) {
+		debug("URL level is not a number: " + levelParam);
+		return 0;
+	}
+	
+	no = parseInt(levelParam, 10);
+	if(no < 1) {
+		debug("URL level is out of range: " + levelParam);
+		return 0;
+	}
+	
+	return no;
+}
+
+//read "?game=" & "?level=" from the URL, call it while init()
+function urlPlayRequestParse()
+{
+	var i, pair, query, params = {};
+	var game = null, level = null, gameId = 0, levelNo = 0;
+	
+	urlPlayRequest = null;
+	
+	if(typeof(window) == "undefined" || !window.location || !window.location.search) return;
+	
+	query = window.location.search.substring(1).split("&");
+	for(i = 0; i < query.length; i++) {
+		pair = query[i].split("=");
+		if(pair.length < 2) continue;
+		params[urlPlayParamDecode(pair[0]).toLowerCase()] = urlPlayParamDecode(pair.slice(1).join("="));
+	}
+	
+	if("game" in params) game = params.game;
+	else if("version" in params) game = params.version;
+	
+	if("level" in params) level = params.level;
+	else if("board" in params) level = params.board;
+	
+	if(game != null) { //a wrong game id must not play some other game version
+		gameId = urlPlayGameId(game);
+		if(gameId <= 0) return; //ignore all URL parameters
+	}
+	
+	levelNo = (level != null)? urlPlayLevelNo(level) : 0;
+	
+	if(gameId <= 0 && levelNo <= 0) return; //no usable parameter, play as usual
+	
+	urlPlayRequest = { game: gameId, level: levelNo };
+	debug("URL play request: game = " + gameId + ", level = " + levelNo);
+}
+
+//apply "?level=", must be called after the level data & resume level are loaded
+function urlPlayApplyLevel()
+{
+	if(urlPlayRequest == null || urlPlayRequest.level <= 0) return;
+	
+	curLevel = urlPlayRequest.level;
+	if(curLevel > levelData.length) curLevel = levelData.length; //levelData[curLevel-1] must exist
+	
+	urlPlayRequest.level = 0; //apply one time only, after that play continues as usual
+	
+	debug("URL play level = " + curLevel + " / " + levelData.length);
+}
+
+//start the game asked by the URL parameters, 1: started
+function urlPlayRequestStart()
+{
+	if(urlPlayRequest == null) return 0;
+	
+	if(urlPlayRequest.game > 0) {
+		playData = urlPlayRequest.game;
+		playData2GameVersionMenuId(); //keep the game version menu in sync
+	}
+	
+	if(playMode == PLAY_MODERN) modernPlay();
+	else {
+		playMode = PLAY_CLASSIC;
+		classicPlay();
+	}
+	
+	return 1;
+}
+
 function selectGame(showDataMsg)
 {
 	getLastPlayInfo();
@@ -326,6 +452,7 @@ function startGame(noCycle)
 	switch(playMode) {
 	case PLAY_CLASSIC:
 		getClassicInfo();	
+		urlPlayApplyLevel(); //URL parameter "?level="
 		levelMap = levelData[curLevel-1];	
 		if(curLevel >= levelData.length && (passedLevel+1) >= levelData.length) {
 			loadEndingMusic(); //6/15/2015, music prepare for winner
@@ -333,6 +460,7 @@ function startGame(noCycle)
 		break;
 	case PLAY_MODERN:
 		getModernInfo();	
+		urlPlayApplyLevel(); //URL parameter "?level="
 		levelMap = levelData[curLevel-1];
 		break;	
 	case PLAY_TEST:
